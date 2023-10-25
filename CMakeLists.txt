@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # -------------------- 
 # Resolve dependencies
 
-# # Include FetchContent Module
+# Include FetchContent Module
 include(FetchContent)
 
 # download and build roboflex_core
