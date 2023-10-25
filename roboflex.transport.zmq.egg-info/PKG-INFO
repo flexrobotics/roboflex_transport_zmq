@@ -1,3 +1,26 @@
+Metadata-Version: 2.1
+Name: roboflex.transport.zmq
+Version: 0.1.0
+Summary: Roboflex Transport ZMQ Library
+Home-page: https://github.com/flexrobotics/roboflex_transport_zmq
+Author: Colin Prepscius
+Author-email: colinprepscius@gmail.com
+License: MIT
+Keywords: zmq,zeromq,robotics,middleware,flexbuffers,python,c++,c++20
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Embedded Systems
+Classifier: Framework :: Robot Framework
+Classifier: Framework :: Robot Framework :: Library
+Classifier: Framework :: Robot Framework :: Tool
+Classifier: Programming Language :: C++
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # roboflex.transport.zmq
 
 Roboflex support for the ZMQ transport.
@@ -133,3 +156,5 @@ Then, create one or more ZMQSubscribers, to listen to what you are publishing. Z
     zmq_sub.produce(
         10, # timeout_milliseconds
     )
+
+
