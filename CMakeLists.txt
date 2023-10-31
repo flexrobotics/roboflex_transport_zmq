@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(roboflex_transport_zmq VERSION 0.1.1 DESCRIPTION "roboflex transport zmq")
+project(roboflex_transport_zmq VERSION 0.1.2 DESCRIPTION "roboflex transport zmq")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -97,6 +97,21 @@ install(TARGETS roboflex_transport_zmq
 #install(FILES transport_zmq.h DESTINATION include/roboflex_transport_zmq)
 install(DIRECTORY include/roboflex_transport_zmq
     DESTINATION include
+)
+
+install(TARGETS roboflex_transport_mqtt
+    EXPORT roboflex_transport_zmqTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+# export the targets to a make script
+install(EXPORT roboflex_transport_zmqTargets
+    FILE roboflex_transport_zmqTargets.cmake
+    #NAMESPACE roboflex_core:: # do we want this?
+    DESTINATION lib/cmake/roboflex_transport_zmq # do we want or need cmake/ ?
 )
 
 
