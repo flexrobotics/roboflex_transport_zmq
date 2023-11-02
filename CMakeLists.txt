@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(roboflex_transport_zmq VERSION 0.1.4 DESCRIPTION "roboflex transport zmq")
+project(roboflex_transport_zmq VERSION 0.1.5 DESCRIPTION "roboflex transport zmq")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -37,6 +37,17 @@ else()
     message(">>>>>>>>>>>> LIBZMQ FOUND THROUGH find_package(ZeroMQ QUIET) <<<<<<<<<<<<<<<<")
 endif()
 
+FetchContent_Declare(
+    cppzmq
+    GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
+    GIT_TAG        v4.10.0
+)
+add_library(cppzmq INTERFACE)
+target_include_directories(cppzmq INTERFACE 
+    $<BUILD_INTERFACE:${cppzmq_SOURCE_DIR}/>
+    $<INSTALL_INTERFACE:include>
+)
+
 
 # -------------------- 
 # Define the library
@@ -55,12 +66,14 @@ set_property(TARGET roboflex_transport_zmq PROPERTY
 target_include_directories(roboflex_transport_zmq PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
     $<INSTALL_INTERFACE:include>
+    ${ZeroMQ_INCLUDE_DIRS}
 )
 
 # Link against the necessary libraries
 target_link_libraries(roboflex_transport_zmq PUBLIC 
     roboflex_core 
     libzmq-static
+    cppzmq
 
     # Unfortunately, we need to link against all these libraries
     # because they are used by roboflex_core, and cmake doesn't
@@ -76,7 +89,7 @@ target_link_libraries(roboflex_transport_zmq PUBLIC
 # -------------------- 
 # Examples
 
-# run_webcam_cpp example
+# pub_sub_0_cpp example
 add_executable(pub_sub_0_cpp examples/pub_sub_0_cpp.cpp)
 target_link_libraries(pub_sub_0_cpp PRIVATE 
     roboflex_core 
@@ -100,6 +113,14 @@ install(DIRECTORY include/roboflex_transport_zmq
 )
 
 install(TARGETS roboflex_transport_zmq
+    EXPORT roboflex_transport_zmqTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+install(TARGETS cppzmq
     EXPORT roboflex_transport_zmqTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
