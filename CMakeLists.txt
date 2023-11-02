@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(roboflex_transport_zmq VERSION 0.1.5 DESCRIPTION "roboflex transport zmq")
+project(roboflex_transport_zmq VERSION 0.1.6 DESCRIPTION "roboflex transport zmq")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -41,9 +41,15 @@ FetchContent_Declare(
     cppzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
     GIT_TAG        v4.10.0
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
 )
+FetchContent_GetProperties(cppzmq)
+if(NOT cppzmq_POPULATED)
+    FetchContent_Populate(cppzmq)
+endif()
 add_library(cppzmq INTERFACE)
-target_include_directories(cppzmq INTERFACE 
+target_include_directories(cppzmq INTERFACE
     $<BUILD_INTERFACE:${cppzmq_SOURCE_DIR}/>
     $<INSTALL_INTERFACE:include>
 )
