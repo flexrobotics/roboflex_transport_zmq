@@ -50,7 +50,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name='roboflex.transport.zmq',
-    version='0.1.6',
+    version='0.1.7',
     description='Roboflex Transport ZMQ Library',
     author='Colin Prepscius',
     author_email='colinprepscius@gmail.com',
