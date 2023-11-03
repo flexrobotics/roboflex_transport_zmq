@@ -1,7 +1,7 @@
 # python/CMakeLists.txt
 cmake_minimum_required(VERSION 3.18)
 
-project(roboflex_transport_zmq_ext VERSION 0.1.7 DESCRIPTION "roboflex transport zmq python wrapping")
+project(roboflex_transport_zmq_ext)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
