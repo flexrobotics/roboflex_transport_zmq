@@ -25,7 +25,7 @@ void ZMQPublisher::ensure_zmq_socket()
 {
     if (socket == nullptr) {
         socket = std::make_unique<zmq::socket_t>(*context, ZMQ_PUB);
-        socket->setsockopt(ZMQ_SNDHWM, this->max_queued_msgs);
+        socket->set(zmq::sockopt::sndhwm, (int)this->max_queued_msgs); // this cast is lame...
         for (auto bind_address: bind_addresses) {
             socket->bind(bind_address);
         }
@@ -108,8 +108,8 @@ void ZMQSubscriber::ensure_sockets()
         // one subscribe socket for each address
         for (std::string connect_address: connect_addresses) {
             auto socket = std::shared_ptr<zmq::socket_t>(new zmq::socket_t(*context, ZMQ_SUB));
-            socket->setsockopt(ZMQ_RCVHWM, max_queued_msgs);
-            socket->setsockopt(ZMQ_SUBSCRIBE, nullptr, 0);
+            socket->set(zmq::sockopt::rcvhwm, (int)this->max_queued_msgs);
+            socket->set(zmq::sockopt::subscribe, {}); // can be used to filter messages
             socket->connect(connect_address);
             sockets.push_back(socket);
         }
@@ -139,7 +139,7 @@ core::MessagePtr ZMQSubscriber::pull(int timeout_milliseconds)
 
     try {
         // poll all the sockets
-        zmq::poll(pollable_socket_items.data(), sockets.size(), timeout_milliseconds);
+        zmq::poll(pollable_socket_items.data(), sockets.size(), std::chrono::milliseconds(timeout_milliseconds));
     } catch (zmq::error_t& e) {
         // just bail
         return nullptr;

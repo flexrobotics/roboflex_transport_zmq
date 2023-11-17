@@ -46,7 +46,7 @@ public:
     void publish(MessagePtr m) { this->signal_self(m); }
 
     const BindList & get_bind_addresses() const { return bind_addresses; }
-    const unsigned int get_max_queued_msgs() const { return max_queued_msgs; }
+    unsigned int get_max_queued_msgs() const { return max_queued_msgs; }
 
 protected:
 
@@ -89,8 +89,8 @@ public:
 
     string get_connect_address() const { return connect_addresses.front(); }
     BindList get_connect_addresses() const { return connect_addresses; }
-    const unsigned int get_timeout_milliseconds() const { return _timeout_milliseconds; }
-    const unsigned int get_max_queued_msgs() const { return max_queued_msgs; }
+    unsigned int get_timeout_milliseconds() const { return _timeout_milliseconds; }
+    unsigned int get_max_queued_msgs() const { return max_queued_msgs; }
 
 protected:
     void ensure_sockets();
