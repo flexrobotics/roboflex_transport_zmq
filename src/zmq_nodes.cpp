@@ -109,7 +109,7 @@ void ZMQSubscriber::ensure_sockets()
         for (std::string connect_address: connect_addresses) {
             auto socket = std::shared_ptr<zmq::socket_t>(new zmq::socket_t(*context, ZMQ_SUB));
             socket->set(zmq::sockopt::rcvhwm, (int)this->max_queued_msgs);
-            //socket->set(zmq::sockopt::subscribe, {}); // can be used to filter messages
+            socket->set(zmq::sockopt::subscribe, ""); // can be used to filter messages. Mandatory!
             socket->connect(connect_address);
             sockets.push_back(socket);
         }

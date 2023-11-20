@@ -16,8 +16,8 @@ int main()
     });
 
     auto zmq_context = transportzmq::MakeZMQContext();
-    auto zmq_pub = transportzmq::ZMQPublisher(zmq_context, "inproc://testit");
-    auto zmq_sub = transportzmq::ZMQSubscriber(zmq_context, "inproc://testit");
+    auto zmq_pub = transportzmq::ZMQPublisher(zmq_context, "tcp://*:5558");
+    auto zmq_sub = transportzmq::ZMQSubscriber(zmq_context, "tcp://localhost:5558");
 
     auto message_printer1 = nodes::MessagePrinter("SENDING MESSAGE:");
     auto message_printer2 = nodes::MessagePrinter("RECEIVED MESSAGE:");

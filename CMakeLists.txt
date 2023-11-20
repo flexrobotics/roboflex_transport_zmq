@@ -96,8 +96,8 @@ target_link_libraries(roboflex_transport_zmq PUBLIC
 # Examples
 
 # pub_sub_0_cpp example
-add_executable(pub_sub_0_cpp examples/pub_sub_0_cpp.cpp)
-target_link_libraries(pub_sub_0_cpp PRIVATE 
+add_executable(pub_sub_0_zmq_cpp examples/pub_sub_0_cpp.cpp)
+target_link_libraries(pub_sub_0_zmq_cpp PRIVATE 
     roboflex_core 
     roboflex_transport_zmq
 )
