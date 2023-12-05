@@ -80,15 +80,6 @@ target_link_libraries(roboflex_transport_zmq PUBLIC
     roboflex_core 
     libzmq-static
     cppzmq
-
-    # Unfortunately, we need to link against all these libraries
-    # because they are used by roboflex_core, and cmake doesn't
-    # seem to be transitivily doing it's thing. Urgh, someone help.
-    flatbuffers_util 
-    xtensor 
-    xsimd 
-    xtl
-    Eigen3::Eigen
 )
 
 
