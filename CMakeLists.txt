@@ -30,7 +30,8 @@ if(NOT ZeroMQ_FOUND)
     FetchContent_Declare(
         libzmq
         GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-        GIT_TAG        v4.3.5
+        #GIT_TAG        v4.3.5  
+        GIT_TAG        master # ONLY for that stupid cmake < 3.5 thing...
     )
     FetchContent_MakeAvailable(libzmq)
 else()
