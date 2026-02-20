@@ -8,12 +8,12 @@
 namespace roboflex {
 namespace transportzmq {
 
-using std::cout, std::string, std::list, core::Node, core::RunnableNode, core::MessagePtr;
+using std::cout, std::cerr, std::string, std::list, core::Node, core::RunnableNode, core::MessagePtr;
 
 using ZMQContext = shared_ptr<zmq::context_t>;
 
 inline ZMQContext MakeZMQContext(unsigned int num_io_threads = 1) {
-    cout << "Made a new ZMQ Context with zmq version "
+    cerr << "Made a new ZMQ Context with zmq version "
          << ZMQ_VERSION_MAJOR << "."
          << ZMQ_VERSION_MINOR << "."
          << ZMQ_VERSION_PATCH << endl;
