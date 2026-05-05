@@ -32,6 +32,18 @@ Using ZMQ, nodes can connect to other nodes, running in different threads, diffe
     make
     make install
 
+Python bindings are off by default for plain C++ CMake builds. To build them with CMake directly:
+
+    cmake -S . -B build -DBUILD_ROBOFLEX_TRANSPORT_ZMQ_PYTHON_EXT=ON
+
+## Run Tests
+
+Tests are plain C++ executables registered with CTest; no separate testing library is required.
+
+    cmake -S . -B build
+    cmake --build build --target test_zmq_transport
+    ctest --test-dir build --output-on-failure
+
 ## Run Examples (see [examples](examples))
 
     go to roboflex_transport_zmq/examples
@@ -43,7 +55,7 @@ Using ZMQ, nodes can connect to other nodes, running in different threads, diffe
 
 ## Nodes:
 
-There are three: `ZMQContext`, `ZMQPublisher`, `ZMQSubscriber`.
+There are five: `ZMQContext`, `ZMQPublisher`, `ZMQSubscriber`, `ZMQRequestClient`, and `ZMQRequestServer`.
 
 To use the ZMQ transport nodes, first you must create a ZMQContext object. This mirrors the design of ZMQ itself.
 
@@ -133,3 +145,33 @@ Then, create one or more ZMQSubscribers, to listen to what you are publishing. Z
     zmq_sub.produce(
         10, # timeout_milliseconds
     )
+
+## RPC / Request-Reply
+
+For request-response workloads, use `ZMQRequestClient` and `ZMQRequestServer` instead of PUB/SUB.
+This avoids subscriber lazy-join behavior and gives the caller a normal blocking call.
+
+These classes use ZMQ REQ/REP. A client has one outstanding request at a time; concurrent calls are serialized.
+
+    def handler(msg):
+        # inspect the request and return a roboflex Message
+        return msg
+
+    ctx = ZMQContext()
+
+    server = ZMQRequestServer(
+        ctx,
+        "tcp://*:5555",
+        request_handler = handler,
+    )
+    server.start()
+
+    client = ZMQRequestClient(
+        ctx,
+        "tcp://127.0.0.1:5555",
+        timeout_milliseconds = 1000,
+    )
+
+    reply = client.call({"hello": "world"}, timeout_milliseconds = 1000)
+
+`ZMQRequestClient` is also a node: when it receives a message, it performs a blocking call and signals the response downstream.

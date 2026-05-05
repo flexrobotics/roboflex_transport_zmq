@@ -29,7 +29,9 @@ class CMakeBuild(build_ext):
             extdir += os.path.sep
 
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPython_EXECUTABLE=' + sys.executable]
+                      '-DPython_EXECUTABLE=' + sys.executable,
+                      '-DBUILD_ROBOFLEX_TRANSPORT_ZMQ_PYTHON_EXT=ON',
+                      '-DBUILD_TESTING=OFF']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -50,7 +52,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name='roboflex.transport.zmq',
-    version='0.1.16',
+    version='0.1.17',
     description='Roboflex Transport ZMQ Library',
     author='Colin Prepscius',
     author_email='colinprepscius@gmail.com',
@@ -78,4 +80,3 @@ setup(
     packages=['roboflex.transport.zmq'],
     package_dir={'roboflex.transport.zmq': 'python'}
 )
-

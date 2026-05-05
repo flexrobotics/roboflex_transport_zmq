@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.18)
 
 project(roboflex_transport_zmq)
 
+option(BUILD_ROBOFLEX_TRANSPORT_ZMQ_PYTHON_EXT "Build roboflex_transport_zmq Python bindings" OFF)
+
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -90,9 +92,22 @@ target_link_libraries(roboflex_transport_zmq PUBLIC
 # pub_sub_0_cpp example
 add_executable(pub_sub_0_zmq_cpp examples/pub_sub_0_cpp.cpp)
 target_link_libraries(pub_sub_0_zmq_cpp PRIVATE 
-    roboflex_core 
     roboflex_transport_zmq
 )
+
+
+# --------------------
+# Tests
+
+include(CTest)
+
+if(BUILD_TESTING)
+    add_executable(test_zmq_transport tests/test_zmq_transport.cpp)
+    target_link_libraries(test_zmq_transport PRIVATE
+        roboflex_transport_zmq
+    )
+    add_test(NAME test_zmq_transport COMMAND test_zmq_transport)
+endif()
 
 
 # -------------------- 
@@ -137,4 +152,6 @@ install(EXPORT roboflex_transport_zmqTargets
 # --------------------
 # build python bindings
 
-add_subdirectory(python)
+if(BUILD_ROBOFLEX_TRANSPORT_ZMQ_PYTHON_EXT)
+    add_subdirectory(python)
+endif()

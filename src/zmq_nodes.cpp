@@ -5,6 +5,16 @@
 namespace roboflex {
 namespace transportzmq {
 
+void send_message_on_socket(zmq::socket_t& socket, core::MessagePtr m)
+{
+    auto z_message = zmq::message_t(
+        m->get_raw_data(),
+        m->get_raw_size(),
+        core::MessageBackingStore::raw_data_deletion_function,
+        new std::shared_ptr<core::MessageBackingStore>(m->payload()));
+    socket.send(z_message, zmq::send_flags::none);
+}
+
 
 // -- ZMQPublisher --
 
@@ -40,16 +50,7 @@ void ZMQPublisher::receive(MessagePtr m)
         return;
     }
 
-    // create a zmq message and send it, tracking the
-    // payload for 0-copy
-    auto z_message = zmq::message_t(
-        m->get_raw_data(),
-        m->get_raw_size(),
-        core::MessageBackingStore::raw_data_deletion_function,
-        new std::shared_ptr<core::MessageBackingStore>(m->payload()));
-
-    // perform the actual send
-    socket->send(z_message, zmq::send_flags::none);
+    send_message_on_socket(*socket, m);
 
     // propagate
     signal(m);
@@ -76,6 +77,12 @@ struct MessageBackingStoreZMQ: public core::MessageBackingStore
 
     zmq::message_t z_msg;
 };
+
+core::MessagePtr message_from_zmq_message(zmq::message_t&& z_message)
+{
+    auto payload = std::make_shared<MessageBackingStoreZMQ>(std::move(z_message));
+    return std::make_shared<core::Message>(payload);
+}
 
 
 // -- ZMQBaseSubscriber --
@@ -157,17 +164,7 @@ core::MessagePtr ZMQSubscriber::pull(int timeout_milliseconds)
             auto z_nbytes = socket->recv(z_message);
             if (!z_nbytes.has_value()) continue;
 
-            // only if we have any observers do we bother signalling.
-            if (this->has_observers()) {
-
-                // get a payload object that will, ultimately, delete the body_message
-                auto payload = std::make_shared<MessageBackingStoreZMQ>(std::move(z_message));
-
-                // construct and return the message
-                auto m = std::make_shared<core::Message>(payload);
-
-                return m;
-            }
+            return message_from_zmq_message(std::move(z_message));
         }
     }
 
@@ -194,6 +191,145 @@ void ZMQSubscriber::child_thread_fn()
     }
 
     destroy_sockets();
+}
+
+
+// -- ZMQRequestClient --
+
+ZMQRequestClient::ZMQRequestClient(
+    ZMQContext context,
+    const BindList &connect_addresses,
+    const std::string &name,
+    unsigned int timeout_milliseconds):
+        Node(name),
+        context(context),
+        connect_addresses(connect_addresses),
+        default_timeout_milliseconds(timeout_milliseconds)
+{
+}
+
+void ZMQRequestClient::ensure_socket()
+{
+    if (socket == nullptr) {
+        socket = std::make_unique<zmq::socket_t>(*context, ZMQ_REQ);
+        socket->set(zmq::sockopt::linger, 0);
+        for (auto connect_address: connect_addresses) {
+            socket->connect(connect_address);
+        }
+    }
+}
+
+void ZMQRequestClient::reset_socket()
+{
+    socket.reset();
+}
+
+core::MessagePtr ZMQRequestClient::call(core::MessagePtr m, int timeout_milliseconds)
+{
+    if (m == nullptr) {
+        return nullptr;
+    }
+
+    const auto timeout = timeout_milliseconds < 0
+        ? (int) default_timeout_milliseconds
+        : timeout_milliseconds;
+
+    std::lock_guard<std::mutex> lock(call_mutex);
+    ensure_socket();
+
+    try {
+        socket->set(zmq::sockopt::sndtimeo, timeout);
+        socket->set(zmq::sockopt::rcvtimeo, timeout);
+
+        send_message_on_socket(*socket, m);
+
+        zmq::message_t reply;
+        auto nbytes = socket->recv(reply);
+        if (!nbytes.has_value()) {
+            reset_socket();
+            return nullptr;
+        }
+
+        return message_from_zmq_message(std::move(reply));
+    } catch (zmq::error_t&) {
+        reset_socket();
+        return nullptr;
+    }
+}
+
+void ZMQRequestClient::receive(core::MessagePtr m)
+{
+    auto response = call(m);
+    if (response != nullptr) {
+        signal(response);
+    }
+}
+
+
+// -- ZMQRequestServer --
+
+ZMQRequestServer::ZMQRequestServer(
+    ZMQContext context,
+    const BindList &bind_addresses,
+    const std::string &name,
+    unsigned int timeout_milliseconds,
+    RequestHandler request_handler):
+        RunnableNode(name),
+        context(context),
+        bind_addresses(bind_addresses),
+        timeout_milliseconds(timeout_milliseconds),
+        request_handler(request_handler)
+{
+}
+
+void ZMQRequestServer::ensure_socket()
+{
+    if (socket == nullptr) {
+        socket = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
+        socket->set(zmq::sockopt::linger, 0);
+        socket->set(zmq::sockopt::rcvtimeo, (int) timeout_milliseconds);
+        for (auto bind_address: bind_addresses) {
+            socket->bind(bind_address);
+        }
+    }
+}
+
+void ZMQRequestServer::destroy_socket()
+{
+    socket.reset();
+}
+
+void ZMQRequestServer::child_thread_fn()
+{
+    ensure_socket();
+
+    while (!this->stop_requested()) {
+        try {
+            zmq::message_t request_msg;
+            auto nbytes = socket->recv(request_msg);
+            if (!nbytes.has_value()) {
+                continue;
+            }
+
+            auto request = message_from_zmq_message(std::move(request_msg));
+            auto response = request_handler
+                ? request_handler(request)
+                : handle_rpc(request);
+
+            if (response == nullptr) {
+                response = std::make_shared<core::BlankMessage>("no_response");
+            }
+
+            send_message_on_socket(*socket, response);
+        } catch (zmq::error_t&) {
+            if (!this->stop_requested()) {
+                destroy_socket();
+                ensure_socket();
+            }
+        }
+    }
+
+    destroy_socket();
 }
 
 } // namespace transportzmq
